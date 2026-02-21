@@ -29,15 +29,21 @@ const MoodTracker = () => {
   const selectedMoodData = MOODS.find((m) => m.value === selectedMood);
 
   // Fetch History
-  const { data: history, isLoading: loadingHistory } = useQuery({
+  const { data: history, isLoading: loadingHistory, error: queryError } = useQuery({
     queryKey: ['moods', userId],
     queryFn: async () => {
+      console.log("Fetching history for user ID:", userId);
       const { data, error } = await supabase
         .from('mood_entries')
         .select('*')
         .eq('user_id', userId)
         .order('logged_at', { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        console.error("Supabase fetch error:", error);
+        toast.error(`Fetch failed: ${error.message}`);
+        throw error;
+      }
       return data;
     },
     enabled: !!userId,

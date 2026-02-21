@@ -1,11 +1,11 @@
--- SUPABASE SQL SCHEMA (FULL RESET)
--- WARNING: This will delete all existing data!
+-- SUPABASE SQL SCHEMA (ROBUST VERSION)
+-- Purpose: Reset and 100% authorize mood tracking tables.
 
--- 1. Cleanup existing tables
+-- 1. Cleanup existing tables (WARNING: Deletes all data)
 DROP TABLE IF EXISTS public.mood_entries;
 DROP TABLE IF EXISTS public.users;
 
--- 2. Create the users table to store identified users
+-- 2. Create the users table
 CREATE TABLE public.users (
     id BIGINT PRIMARY KEY, -- External ID from MantraCare API
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -27,17 +27,24 @@ CREATE TABLE public.mood_entries (
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mood_entries ENABLE ROW LEVEL SECURITY;
 
--- 5. RLS Policies
--- NOTE: Using 'anon' key for the handshake protocol.
--- In production, policies should ideally use auth.uid() if using Supabase Auth,
--- but since we use a custom handshake, we allow based on the passed user_id.
+-- 5. Set up RLS Policies (Explicit for anon role)
+-- These policies grant full read/write access to the 'anon' key (the public API key)
 
-CREATE POLICY "Allow authenticated mood operations" ON public.mood_entries
+DROP POLICY IF EXISTS "Allow public mood operations" ON public.mood_entries;
+CREATE POLICY "Allow public mood operations" ON public.mood_entries
     FOR ALL
+    TO anon, authenticated
     USING (true)
     WITH CHECK (true);
 
-CREATE POLICY "Allow user initialization" ON public.users
+DROP POLICY IF EXISTS "Allow public user initialization" ON public.users;
+CREATE POLICY "Allow public user initialization" ON public.users
     FOR ALL
+    TO anon, authenticated
     USING (true)
     WITH CHECK (true);
+
+-- 6. Grant basic permissions to the 'anon' and 'authenticated' roles
+GRANT ALL ON public.users TO anon, authenticated;
+GRANT ALL ON public.mood_entries TO anon, authenticated;
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
