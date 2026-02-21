@@ -13,6 +13,8 @@ const MOODS = [
   { emoji: "😢", label: "Struggling", value: 1, colorVar: "--mood-struggling" },
 ] as const;
 
+import { toast } from "sonner";
+
 const MoodTracker = () => {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
@@ -50,13 +52,11 @@ const MoodTracker = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['moods', userId] });
       setLogged(true);
+      toast.success("Mood logged successfully!");
     },
     onError: (error: any) => {
       console.error("Failed to log mood to Supabase:", error);
-      // For local development or missing tables, we still want the user to see the success state
-      // but we should warn them.
-      setLogged(true);
-      // We could add a toast here if we had one accessible
+      toast.error(`Failed to save: ${error.message || "Database connection error"}`);
     }
   });
 

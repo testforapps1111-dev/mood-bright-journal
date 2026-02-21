@@ -92,7 +92,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .from('users')
                 .upsert({ id }, { onConflict: 'id' });
 
-            if (error) console.error("Error initializing user in Supabase:", error);
+            if (error) {
+                console.error("Error initializing user in Supabase:", error);
+                throw error;
+            }
         };
 
         handleAuth();
